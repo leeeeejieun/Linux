@@ -27,7 +27,8 @@ alias vi='/usr/bin/vim'
 alias grep='grep --color=auto -i'
 alias rmtest='cd /test; rm -rf /test/*'
 alias ipconfig='ip addr'
-
+alias chrome='/usr/bin/google-chrome --no-sandbox'
+alias df='df -hT'
 export PS1='\[\e[31;1m\][\u@\h\[\e[33;1m\] \w]\$ \[\e[m\]'
 
 #source ~/.local/share/blesh/ble.sh
