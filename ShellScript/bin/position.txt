@@ -1,0 +1,7 @@
+----------------------------------
+                   XXX XXX XXX                 
+OOO OOO XXX OOO    OOO OOO OOO
+XXX OOO OOO OOO    XXX XXX XXX
+XXX XXX OOO OOO    OOO OOO OOO
+    OOO OOO OOO    OOO OOO 000
+----------------------------------
