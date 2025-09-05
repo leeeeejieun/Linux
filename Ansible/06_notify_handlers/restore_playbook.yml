@@ -1,0 +1,42 @@
+---
+- name: MariaDB 설치 작업
+  hosts: databases
+  remote_user: root
+  vars:
+    db_packages:
+      - mariadb-server
+      - python3-PyMySQL
+    db_service: mariadb
+    conf_get_url : http://ansible.example.com/my.cnf.standard
+    conf_mysql: /etc/my.cnf
+    conf_dir : /var/lib/mysql
+  tasks:
+  ########################################################
+  # 1. DB 설정 파일 및 디렉터리 삭제
+  #   - /etc/my.cnf
+  #   - /var/lib/mysql 
+  # 2. DB 서비스 중지 - mariadb
+  # 3. DB 패키지 삭제 - mariadb-server, python3-PyMySQL
+  #########################################################
+
+    - name: 1) DB 서비스 중지 - {{ db_service }}
+      ansible.builtin.systemd:
+        name: "{{ db_service }}"
+        state: stopped
+        enabled: false
+
+    - name: 2) DB 설정 파일 및 디렉터리 삭제
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ conf_mysql }}"
+        - "{{ conf_dir }}"
+
+    - name: 3) DB 패키지 삭제 - {{ db_packages }}
+      ansible.builtin.dnf:
+        name: "{{ db_packages }}"
+        state: present 
+
+
+

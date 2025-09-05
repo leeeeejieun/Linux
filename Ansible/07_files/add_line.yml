@@ -1,0 +1,17 @@
+
+---
+- name: 0) 모듈 테스트 - lineinfile
+  hosts: all
+  tasks:
+    - name: 1) 파일 생성
+      ansible.builtin.copy:
+        content: '헤헤헤'
+        dest: /home/devops/users.txt
+        mode: '0644'
+        
+    - name: 2) 파일에 라인 추가
+      ansible.builtin.lineinfile:
+        path: /home/devops/users.txt
+        line: '추가된 라인'
+        state: present 
+

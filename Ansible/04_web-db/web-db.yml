@@ -1,0 +1,143 @@
+---
+##############################
+# Play1 : WEB-PHP-DB 구현 
+# 1. 웹서버 + 방화벽 설정
+# 1) WEB 패키지 설치
+# 2) WEB 서비스 설정
+# 3) WEB 서비스 기동
+# 4) 방화벽 등록
+# 2. DB 설정  
+# 1) DB 패키지 설치
+# 2) DB 서비스 기동
+# 3) DB 서비스 설정
+# 4) 방화벽 등록
+# Play2: 웹 확인
+##############################
+- name : 3-Tier Architecture 구현
+  hosts: webservers
+  tasks:
+    # 1. 웹 서버 + 방화벽 설정
+    # 웹 패키지 설치 : httpd, mod_ssl 
+    # PHP 패키지 : php, php-mysqlnd, php-pdo
+    # 방화벽 패키지 : firewalld  
+    - name : 1) WEB 패키지 설치
+      ansible.builtin.dnf:
+        name:
+          - httpd
+          - mod_ssl
+          - php
+          - php-mysqlnd
+          - php-pdo
+          - firewalld
+        state: present
+      
+    - name : 2) 웹 서비스 설정
+      ansible.builtin.get_url:
+        url: http://192.168.10.10/index.php
+        dest: /var/www/html/index.php
+        mode: '0644'
+    
+    - name : 3) 웹 서비스 기동
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - httpd
+        - firewalld
+
+    - name : 4) 방화벽에 등록 - http, https
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: true
+        state: enabled
+        immediate: true
+      loop:
+        - http
+        - https
+
+    # 2. DB 서버 설정
+    # 1) 패키지 설치
+    # * DB 패키지: mariadb-server, mariadb, python3-PyMySQL  
+    - name : 1) DB 패키지 설치
+      ansible.builtin.dnf:
+        name:
+          - mariadb-server
+          - mariadb
+          - python3-PyMySQL
+        state: present
+    
+    - name: 2) DB 서비스 기동
+      ansible.builtin.systemd:
+        name: mariadb
+        state: started
+        enabled: true
+
+    ###################################################
+    # mysql_secure_installation 스트립트
+    # 1. root 암호 변경(인증 방식 unix_socket)
+    # 2. root 사용자 원격 접속 차단
+    # 3. 익명 사용자 제거
+    # 4. test DB 제거
+    # 5. 권한 적용
+    
+    # [주의] 처음 한 번만 수행
+    # - name: 3) DB 서비스 설정 - root 암호 변경
+    #   community.mysql.mysql_user:
+    #     name: root
+    #     host: localhost
+    #     state: present
+    #     password: ansible
+    #     login_user: root
+    #     login_password: ""
+    #     login_unix_socket: /var/lib/mysql/mysql.sock
+
+    - name : 4) DB 서비스 설정 - ansible 사용자 추가
+      community.mysql.mysql_user:
+        name: ansible
+        password: ansible
+        state: present
+        priv: '*.*:ALL'
+        login_user: root
+        login_password: ansible
+        login_unix_socket: /var/lib/mysql/mysql.sock
+
+    - name : 5) DB 서비스 설정 - root 사용자 원격 접속 차단
+      community.mysql.mysql_user:
+        name: root
+        host : '%'
+        state: absent
+        login_user: root
+        login_password: ansible
+        login_unix_socket: /var/lib/mysql/mysql.sock
+
+    - name : 6) DB 서비스 설정 - 익명 사용자 제거
+      community.mysql.mysql_user:
+        name: ''
+        host : localhost
+        state: absent
+        login_user: root
+        login_password: ansible
+        login_unix_socket: /var/lib/mysql/mysql.sock
+
+    - name : 7) 방화벽 등록 - mysql
+      ansible.posix.firewalld:
+        service: mysql
+        permanent: true
+        state: enabled
+        immediate: true
+
+##############################
+# Play2: 웹 확인
+##############################
+- name : 웹 서버 요청
+  hosts: localhost
+  tasks:
+    - name: 1) web1 웹 서버에 웹 요청 확인
+      ansible.builtin.uri:
+        url: http://192.168.10.10/index.php
+        status_code: 200
+
+    - name: 2) 웹 페이지 내용 확인
+      ansible.builtin.debug:
+        var: output.server

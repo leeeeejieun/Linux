@@ -1,0 +1,15 @@
+---
+# defaults file for rollacksvc
+fw_ports:
+  - http
+  - https
+services:
+  - httpd
+  - firewalld
+conf_files:
+  - /etc/httpd/conf.d/vhost.conf
+  - /var/www/vhosts
+packages:
+  - httpd
+  - mod_ssl
+  - firewalld

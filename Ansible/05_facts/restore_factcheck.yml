@@ -1,0 +1,39 @@
+---
+- name: Install and start Apache HTTPD
+  hosts: all
+  gather_facts: false
+  tasks:
+    ###############################################
+    # >>>> 팩트 변수를 사용하지 않는 플레이북 <<<<
+    ###############################################
+
+    - name: Configuration firewall
+      ansible.posix.firewalld:
+        service: http
+        permanent: yes
+        immediate: yes
+        state: disabled
+
+    - name: firewalld, httpd is started
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      loop:
+        - firewalld
+        - httpd
+
+    - name: remove index.html
+      ansible.builtin.file:
+        path: /var/www/html/index.html
+        state: absent
+
+    - name: httpd package is absent
+      ansible.builtin.yum:
+        name: httpd
+        state: absent
+
+
+
+
+

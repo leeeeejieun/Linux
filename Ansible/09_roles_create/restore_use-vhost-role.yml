@@ -1,0 +1,8 @@
+---
+- name: Restore use_vhost_role.yml
+  hosts: all
+  tasks:
+    - name: 가상 호스트 설정 복원 작업
+      ansible.builtin.include_role:
+        name: rollack-svc
+   

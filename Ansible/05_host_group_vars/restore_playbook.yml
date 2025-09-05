@@ -1,0 +1,14 @@
+---
+- name: Restore Playbook.yml
+  hosts: all
+  tasks:
+    - name: 패키지 삭제 {{ packages }}
+      ansible.builtin.yum:
+        name :  "{{ packages }}"
+        state: absent
+      vars: 
+        packages:
+          - httpd
+          - mariadb-server
+          - php
+          - mutt

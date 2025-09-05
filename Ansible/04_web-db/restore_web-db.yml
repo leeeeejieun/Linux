@@ -1,0 +1,53 @@
+---
+###############################
+# web-db.yml 설정 전으로 복원 작업
+###############################
+- name : 3-Tier Architecture 구현
+  hosts: webservers
+  tasks:
+    # 1. 웹 서버 + 방화벽 설정
+    # 웹 패키지 설치 : httpd, mod_ssl 
+    # PHP 패키지 : php, php-mysqlnd, php-pdo
+    # 방화벽 패키지 : firewalld  
+  
+    - name : 1) 방화벽에 제거 - http, https
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: true
+        state: disabled
+        immediate: true
+      loop:
+        - http
+        - https
+        - mysql
+
+    - name : 2) 서비스 종료 - httpd, mariadb
+      ansible.builtin.systemd:
+        service: "{{ item }}"
+        state: stopped
+        enabled: false
+      loop:
+        - httpd
+        - mariadb
+      
+    - name : 3) 설정 파일 삭제 - /var/www/html/index.php, /var/lib/mysql
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /var/www/html/index.php
+        - /var/lib/mysql
+    
+    - name : 4) 패키지 삭제
+      ansible.builtin.dnf:
+        name:
+          - httpd
+          - mod_ssl
+          - php
+          - php-mysqlnd
+          - php-pdo
+          - firewalld
+          - mariadb-server
+          - mariadb
+          - python3-PyMySQL
+        state: absent

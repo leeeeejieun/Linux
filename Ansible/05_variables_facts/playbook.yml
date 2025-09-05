@@ -1,0 +1,90 @@
+---
+########################################
+# Play 01: .htaccess 파일 사용하는 웹서버 구축
+# * (ㄱ) 패키지 설치
+# * (ㄴ) 서비스 설정
+#   - /etc/httpd/conf/httpd.conf(AllowOveride AuthConfig)
+#   - /var/www/html/.htaccess
+#   - /etc/httpd/secrets/htpasswd
+#   - /var/www/html/index.html
+# * (ㄷ) 서비스 기동
+# * (ㄹ) 방화벽 등록
+# Play 02: 웹 요청
+########################################
+- name: Play1. 고급 웹서버 구축
+  hosts: ansible1.example.com
+  vars_files:
+    - vars/file.yml
+  tasks:
+
+    - name: 1) 패키지 설치
+      ansible.builtin.dnf:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - "{{ firewall_pkg }}"  
+        - "{{ web_pkg }}"  
+        - "{{ ssl_pkg }}"  
+   
+    - name: 2) 서비스 설정 - /etc/httpd/conf/httpd.conf
+      ansible.builtin.copy:
+        src: "{{  httpdconf_src }}"
+        dest: "{{ httpdconf_dest }}"
+        owner: root
+        group: root
+        mode: '0644'
+    
+    - name: 3) 서비스 설정 - /var/www/html/.htaccess
+      ansible.builtin.copy:
+        src: "{{  htaccess_src  }}"
+        dest: "{{  web_root }}"
+        owner: root
+        group: root
+        mode: '0644'   
+
+    - name: 4) 서비스 설정 -  /etc/httpd/secrets 인증 파일을 저장할 디렉터리 생성
+      ansible.builtin.file: 
+        path: "{{ secrets_dir }}"
+        state: directory
+        mode: '0755'
+
+
+    - name: 5) 서비스 설정 - /etc/httpd/secrets/htpasswd 인증 파일 복사
+      ansible.builtin.copy:
+        src: "{{ secrets_src }}"
+        dest: "{{ secrets_dest }}"
+        owner: root 
+        group: root
+        mode: '0644'
+
+    - name: 6) 서비스 설정 - 테스트 웹 페이지 생성
+      ansible.builtin.copy:
+        content: "This is a test web page!\n"
+        dest: "{{ web_root }}/index.html"
+
+    - name: 7) 서비스 기동  - httpd
+      ansible.builtin.systemd:
+        name: "{{ web_svc }}"
+        state: started
+        enabled: true
+
+    - name: 8) 방화벽 등록 - http
+      ansible.posix.firewalld:
+        service: "{{ fw_80 }}"
+        permanent: true
+        state: enabled
+        immediate: true
+    
+- name: Play2. www.ansible1.com 웹 요청 테스트
+  hosts: localhost
+  tasks:
+    - name:  www.ansible1.com HTTP GET 요청 보내기
+      ansible.builtin.uri:
+        url: http://ansible1.example.com
+        return_content: true
+        status_code: 200
+        user: guest
+        password: soldesk1.
+      register: output
+    - debug: var=output.content
+      

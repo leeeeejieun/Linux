@@ -1,0 +1,33 @@
+---
+############################################
+# 1. 사용자/암호 추가 - developer/developer
+# 2. 키 쌍 배포(public key)
+# 3. 암호 입력 없이 sudo 사용 가능하도록 설정
+#   * /etc/sudoers.d/devleoper
+    # --------------------------------------
+    # developer ALL=(ALL) NOPASSWD: ALL
+    # --------------------------------------
+############################################
+- name: 모든 관리 호스트에 developer 사용자 추가
+  hosts: all
+  gather_facts: false
+  vars: 
+    uname: developer
+    password: developer
+  tasks:  
+
+    - name: 사용자 추가
+      ansible.builtin.user:
+        name: "{{ uname }}"
+        password: "{{ password | password_hash('sha512') }}"
+
+    - name: 키 쌍 배포
+      ansible.posix.authorized_key:
+        user: "{{ uname }}"
+        state: present
+        key: "{{ lookup('file', '/home/ansible/.ssh/id_rsa.pub') }}"
+
+    - name: /etc/sudoers.d/devleoper 배포
+      ansible.builtin.copy:
+        content: "{{ uname }} ALL=(ALL) NOPASSWD: ALL"
+        dest: "/etc/sudoers.d/{{ uname }}"

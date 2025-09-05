@@ -1,0 +1,27 @@
+---
+- name: 사용자 정의 팩트를 사용한 웹 서버 설정
+  hosts: webserver
+  gather_facts: true   
+  tasks:
+    ########################################
+    # 1. 패키지 설치
+    # 2. 서비스 기동
+    # 3. 방화벽 등록
+    ########################################
+      - name: 1) 패키지 설치 - httpd
+        ansible.builtin.dnf:
+          name: "{{ ansible_local.custom.general.package}}"
+          state: present
+      
+      - name: 2) 서비스 기동 - httpd  
+        ansible.builtin.systemd:
+           name: "{{ ansible_local.custom.general.service }}"
+           state: "{{ ansible_local.custom.general.state }}"
+           enabled: true
+      
+      - name: 3) 방화벽 등록 - http
+        ansible.posix.firewalld:
+          service: "{{ ansible_local.custom.general.fwsvc }}"
+          permanent: true
+          state: enabled
+          immediate: true

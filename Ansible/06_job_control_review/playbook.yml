@@ -1,0 +1,63 @@
+---
+- name: Play1. 작업 제어 실습
+  hosts: webservers
+  vars_files:
+    - vars/vars.yml 
+  tasks:
+    ##############################################
+    # 0) 점검 - MEM > 256, 배포판: CentOS
+    # 1) 패키지 설치 - httpd, mod_ssl, firewalld
+    # 2) 서비스 기동 - httpd, firewalld
+    # 3) 웹 서버 설정(notify)
+    #   * /etc/pki/tls/certs/localhost.crt
+    #   * /etc/pki/tls/private/localhost.key
+    #   * /var/www/html/index.html
+    # 4) 방화벽 포트 등록 - http, https
+    # 5) handlers 정의
+    ##############################################
+  - name: 0) 점검 - MEM > 256, 배포판 CentOS
+    ansible.builtin.fail:
+      msg: 메모리가 256이 아니거나, 배포판이 CentOS가 아닙니다.
+    when: >
+      ansible_memtotal_mb < 256 or ansible_distribution != 'CentOS'
+  
+  - name: 1) 점검 - CentOS 9 버전 확인
+    ansible.builtin.fail:
+      msg: CentOS 9 버전이 아닙니다.
+    when: ansible_distribution_version != '9'
+   
+  - name: 2) 패키지 설치 - httpd, mod_ssl, firewalld
+    ansible.builtin.dnf:
+      name: "{{ packages }}"
+      state: present
+  
+  - name: Block ~ Rescue
+    block:
+     - name: 3) 웹 서버 설정
+       ansible.builtin.copy:
+          src: "{{ item.src }}"
+          dest: "{{ item.dest }}"
+          owner: "{{ item.owner }}"
+          group: "{{ item.group }}"
+          mode: "{{ item.mode | string}}"
+       loop: "{{ web_config_files }}"
+    rescue:
+      - name: 3) 웹 서버 설정 - 에러 메세지 출력
+        ansible.builtin.debug:
+          msg: "[ FAIL ] 웹 서버 설정이 잘못되었습니다."
+      
+      - name: 4) 서비스 기동
+        ansible.builtin.systemd:
+          name: "{{ item }}"
+          state: started
+          enabled: true
+        loop: "{{ services }}"
+
+      - name: 5) 방화벽 등록
+        ansible.posix.firewalld:
+          service: "{{ item }}"
+          state: enabled
+          permanent: true
+          immediate: true
+        loop: "{{ firewall_rules   }}"
+          

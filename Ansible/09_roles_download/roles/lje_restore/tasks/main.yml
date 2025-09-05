@@ -1,0 +1,70 @@
+---
+# tasks/main.yml for rollbacksvc
+
+- name: 중요 파일 패턴 정의
+  set_fact:
+    critical_file_patterns: '^/etc/(passwd|shadow|hosts|systemd/|profile)|^/boot'
+
+- name: 방화벽 서비스 상태 확인
+  ansible.builtin.shell: "firewall-cmd --permanent --query-service={{ item }}"
+  register: fw_status
+  failed_when: false
+  changed_when: false
+  loop: "{{ fw_ports }}"
+
+- name: 방화벽 제거 - 활성화된 서비스만 비활성화
+  ansible.posix.firewalld:
+    service: "{{ item.item }}"
+    permanent: true
+    state: disabled
+    immediate: true
+  when: item.rc == 0
+  loop: "{{ fw_status.results }}"
+
+- name: 패키지 설치 여부 확인
+  ansible.builtin.command: "rpm -q {{ item }}"
+  register: pkg_check
+  changed_when: false
+  failed_when: false
+  loop: "{{ packages }}"
+
+- name: 패키지 존재 여부 출력
+  ansible.builtin.debug:
+    msg: >
+      {{ item.item }} 은(는) {{
+        '설치되어 있습니다.' if item.rc == 0 else '설치되어 있지 않습니다.'
+      }}
+  loop: "{{ pkg_check.results }}"
+
+- name: 서비스 중지
+  ansible.builtin.systemd:
+    name: "{{ item.item }}"
+    state: stopped
+    enabled: false
+  when: item.rc == 0
+  loop: "{{ pkg_check.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  ignore_errors: true
+
+- name: 설정 파일 삭제 전 사용자 확인
+  ansible.builtin.pause:
+    prompt: |
+      다음 설정 파일들을 삭제하려고 합니다:
+      {{ conf_files | join("\n  - ")  }}
+
+      정말 삭제하시겠습니까?
+      계속하려면 Enter, 취소하려면 Ctrl+C + A (중단)
+
+- name: 서비스 설정 삭제
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ conf_files }}"
+
+- name: 패키지 삭제
+  ansible.builtin.dnf:
+    name: "{{ item.item }}"
+    state: absent
+  when: item.rc == 0
+  loop: "{{ pkg_check.results }}"

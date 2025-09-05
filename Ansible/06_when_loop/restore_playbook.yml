@@ -1,0 +1,26 @@
+---
+- name: DB 서비스 기동 - loop 테스트
+  hosts: database_prod
+  vars:
+    packages:
+        - mariadb   
+        - mariadb-server
+        - python3-PyMySQL
+    service: mariadb
+  tasks:
+  ############################################################
+  # 1. 서비스 중지 - mariadb
+  # 1. 패키지 제거 - mariadb, mariadb-server. python3-PyMySQL
+  ############################################################
+    - name: 서비스 중지
+      ansible.builtin.systemd:
+        name: "{{ service }}"
+        state: stopped
+        enabled: false
+
+    - name: 패키지 삭제
+      ansible.builtin.dnf:
+        name: "{{ packages }}"
+        state: absent
+      when: ansible_distribution == "CentOS"
+    

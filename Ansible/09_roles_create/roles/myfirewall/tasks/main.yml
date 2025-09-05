@@ -1,0 +1,21 @@
+---
+# tasks file for myfirewall
+# fw_80: http, fw_443 : https
+- name: 패키지 설치 - firewalld
+  ansible.builtin.dnf:
+    name: firewalld
+    state: present
+
+- name: 서비스 기동 - firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: 방화벽 등록 - {{ fw_80 }} , {{ fw_443 }}
+  ansible.posix.firewalld:
+    service: "{{ item }}"
+    permanent: true
+    state: enabled
+    immediate: true
+  loop: "{{ ports }}"

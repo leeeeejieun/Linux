@@ -1,0 +1,12 @@
+---
+- name : 사용자 제거
+  hosts: deservers
+  vars_files:
+  - vars/secret.yml
+  tasks:
+    - name: Secret을 사용한 사용자 제거
+      ansible.builtin.user:
+        name: "{{ item.name }}"
+        state: absent
+        remove: true   # 사용자 홈 디렉터리 및 메일 스풀까지 삭제
+      loop: "{{ newusers }}"

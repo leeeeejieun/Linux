@@ -1,0 +1,21 @@
+---
+##############################################################
+# 가상 호스트 생성
+# [   roles   ]
+# 1. 패키지 설치 - httpd, mod_ssl, firewalld
+# 2. 서비스 설정 - 
+#   * /etc/httpd/conf.d/vhost.conf
+#     - vhost.conf.j2 -> /etc/httpd/conf.d/vhost.conf
+#   * /var/www/vhosts/ansible1/index.html
+#     - /var/www/vhsots 디렉터리 생성
+#     - index.html -> /var/www/vhosts/ansible1
+# 3. 서비스 기동 - httpd, firewalld
+# 4. 방화벽 등록 - http, https
+###############################################################
+- name: 가상 호스트 설정
+  hosts: webservers
+  tasks:
+    - name: 가상 호스트 설정 역할
+      ansible.builtin.include_role:
+        name: myvhost
+   

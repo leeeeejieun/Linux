@@ -1,0 +1,15 @@
+---
+- name: 모든 서버에 epel-release, boxes 패키지 설치
+  hosts: all
+  tasks:
+    - name: 패키지 설치 - epel-release
+      ansible.builtin.include_tasks: install_package.yml
+      vars:
+        package:
+          web_pkg: epel-release
+
+    - name: 패키지 설치 - boxes
+      ansible.builtin.include_tasks: install_package.yml
+      vars:
+        package:
+          web_pkg: boxes

@@ -1,0 +1,21 @@
+---
+- name: 모든 관리 호스트에 .bashrc 파일을 배포하여 ble.sh 기능 및 PS1 변수 설정
+  hosts: all
+  remote_user: devops
+  become: false
+  tasks:
+    - name: 1) ~/.local/share/blesh 디렉터리 배포
+      ansible.builtin.copy:
+        src: files/blesh
+        dest: /home/devops/.local/share
+        owner: devops
+        group: devops
+        mode: '0755'
+
+    - name: 2) .bashrc 파일 배포
+      ansible.builtin.template:
+        src: tamplates/bashrc.j2
+        dest: /home/devops/.bashrc
+        owner: devops
+        group: devops
+        mode: '0644'

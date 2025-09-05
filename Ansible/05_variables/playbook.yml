@@ -1,0 +1,61 @@
+---
+#####################################
+# Play1 - 웹서버 설정
+# 1) 패키지 설치 - httpd, mod_ssl, firewalld, python3-PyMySQL
+# 2) 서비스 설정 - /var/www/html/index.html
+# 3) 서비스 기동 - httpd, firewalld
+# 4) 방화벽 등록 - http, https
+# Play2 -  웹서버 테스트
+# 1) 웹 요청 - http://192.168.10.11
+# 2) 웹 출력
+#####################################
+- name: Play1 - 웹서버 설정
+  hosts: webserver
+
+  tasks:
+    - name: 1) 패키지 설치
+      ansible.builtin.dnf:
+        name:
+          - "{{ pkg_http_web }}"
+          - "{{ pkg_https_web }}"
+          - "{{ pkg_fw }}"
+          - "{{ pkg_python }}"
+        state: present
+
+    - name: 2) 서비스 설정 - /var/www/html/index.html
+      ansible.builtin.copy:
+        content: 'Test WEB Page'
+        dest: "{{ index_file }}"
+        mode: '0644'
+
+    - name: 3) 서비스 기동
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop:
+        - "{{ svc_fw }}"
+        - "{{ svc_web }}"
+
+    - name: 4) 방화벽 등록 - http/80 & https/443
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: true
+        state: enabled
+        immediate: true
+      loop:
+        - "{{ fw_80 }}"
+        - "{{ fw_443 }}"
+
+- name: Play2 - 웹서버 요청 테스트
+  hosts: localhost
+  become: false
+  vars:
+    url: 'http://192.168.10.11/'
+  tasks:
+    - name: 1) 웹 요청
+      ansible.builtin.uri:
+        url: "{{ url }}"
+        status_code: 200
+      register: output
+    - debug: var=output.msg

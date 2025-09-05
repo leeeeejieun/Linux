@@ -1,0 +1,39 @@
+---
+- name: Restore intranet.yml
+  hosts: web1.example.com
+  tasks:
+  - name : 1) 방화벽 제거
+    ansible.posix.firewalld:
+      service: http
+      permanent: true
+      state: disabled
+      immediate: true
+    ignore_errors: true
+
+  - name : 2) 서비스 중지
+    ansible.builtin.service:
+      name: httpd
+      state: stopped
+      enabled: false
+
+  - name : 3) 서비스 중지
+    ansible.builtin.service:
+      name: firewalld
+      state: stopped
+      enabled: false
+      
+  - name : 4) 파일 삭제
+    ansible.builtin.file:
+      path : /var/www/html/index.html
+      state : absent
+  
+  - name : 5) 패키지 삭제
+    ansible.builtin.dnf:
+      name: httpd 
+      state: present
+
+
+
+
+
+  

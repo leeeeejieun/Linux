@@ -1,0 +1,12 @@
+---
+- name: 관리 대상 호스트에 /etc/hosts 파일 배포
+  hosts: all
+  tasks:
+    - name: /etc/hosts 파일 배포
+      ansible.builtin.copy:
+        src: files/hosts
+        dest: /etc/hosts
+        owner: root
+        group: root
+        mode: '0644'
+  
