@@ -1,0 +1,47 @@
+---
+- name: FTP 서버 구축
+  hosts: test
+  tasks:  
+    - name: 1) 패키지 설치
+      ansible.builtin.dnf:
+        name:
+          - vsftpd
+          - ftp
+          - firewalld
+        state: present
+      
+    - name: 2) 서비스 기동
+      ansible.builtin.systemd:
+        name: vsftpd
+        state: started
+        enabled: true
+
+    - name: 3) 서비스 설정 - 익명 사용자 접근 거부
+      ansible.builtin.lineinfile:
+        path: /etc/vsftpd/vsftpd.conf
+        regexp: '^anonymous_enable'
+        line: 'anonymous_enable=NO'
+      notify: restart vsftpd
+    
+    - name: 4) 서비스 설정 - root 사용자 접근 허용
+      ansible.builtin.lineinfile:
+        path: "{{ item }}"
+        regexp: '^root'
+        state: absent
+      loop: 
+        - /etc/vsftpd/ftpusers
+        - /etc/vsftpd/user_list
+      notify: restart vsftpd
+
+    - name: 5) 방화벽 등록
+      ansible.posix.firewalld:
+        service: ftp
+        permanent: true
+        state: enabled
+        immediate: true
+
+  handlers:
+    - name: restart vsftpd
+      ansible.builtin.systemd:
+        name: vsftpd
+        state: restarted

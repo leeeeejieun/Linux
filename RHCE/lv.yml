@@ -1,0 +1,67 @@
+---
+############################################################################
+# 1. sdb 파티션 작업 - 최소 800Mib
+# * 파티션 생성 시 주어진 크기에 해당하지 않으면 'Size not Enough' 메세지 표시 
+# * 관리 노드에 sdb 디스크가 없으면 'The device does not exist' 메세지 표시
+# 2. PV 생성 - 800Mib
+# 3. VG 생성 - research / 800Mib
+# 4. LV 생성 - data / 500Mib
+# 5. 파일 시스템 생성 - ext4
+# 6. 마운트 작업  - /mnt/search
+############################################################################
+- name: 논리 볼륨 생성
+  hosts: webservers
+  tasks:  
+
+    - name: check the deivce - /dev/sdb
+      ansible.builtin.fail:
+        msg: The device does not exist
+      when: ansible_devices.sdb is not defined
+  
+    - name: block ~ rescue
+      block:
+        - name: Create the partition - /dev/sdb(1GiB)
+          community.general.parted:
+            device: /dev/sdb
+            number: 1
+            part_start: 1MiB
+            part_end: 100%
+            state: present
+            flags: [lvm]
+      rescue:
+        - name: Print the error message
+          ansible.builtin.debug:
+            msg: Size not Enough
+        
+        - name: Create the partition - /dev/sdb(800Mib)
+          community.general.parted:
+            device: /dev/sdb
+            number: 1
+            part_start: 1MiB
+            part_end: 800MiB
+            state: present
+            flags: [lvm]
+
+    - name: Create the volume group
+      ansible.builtin.lvg:
+        vg: research
+        pvs: /dev/sdb1
+    
+    - name: Create the logical volume
+      community.general.lvol:
+        vg: research
+        lv: data
+        size: 500m
+      
+    - name: Create a ext4 filesystem on /dev/research/data
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/research/data
+
+    - name: Mount up device 
+      ansible.posix.mount:
+        path: /mnt/research
+        src: /dev/research/data
+        fstype: ext4
+        opts: defaults
+        state: mounted

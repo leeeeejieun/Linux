@@ -1,0 +1,14 @@
+---
+# vars file for roles/apache
+packages:
+  - httpd
+  - mod_ssl
+  - firewalld
+
+services:
+  - httpd
+  - firewalld
+
+fw_ports:
+  - http
+  - https

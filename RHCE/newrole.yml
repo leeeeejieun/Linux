@@ -1,0 +1,7 @@
+---
+- name: 웹 서버 설정 role 생성 
+  hosts: webservers
+  tasks:
+    - name: 웹 서버 설정
+      ansible.builtin.include_role:
+        name: apache

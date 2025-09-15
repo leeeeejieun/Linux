@@ -1,0 +1,46 @@
+---
+- name: RHCE 종합문제
+  hosts: all
+  tasks:
+    - name: 시작 메시지
+      ansible.builtin.debug:
+        msg: "[ OK ] 종합문제"
+
+- name: 3) 패키지 설치
+  ansible.builtin.import_playbook: packages.yml
+
+- name: 4) 레드헷 시스템 역할 사용
+  ansible.builtin.import_playbook: time_sync.yml
+
+- name: 6) 웹 서버 구성 및 확인
+  ansible.builtin.import_playbook: webserver.yml
+
+- name: 7) 역할 생성 및 사용
+  ansible.builtin.import_playbook: newrole.yml
+
+- name: 8) 논리 볼륨 생성 및 사용
+  ansible.builtin.import_playbook: lv.yml
+
+- name: 9) 호스트 파일 생성
+  ansible.builtin.import_playbook: hosts.yml
+
+- name: 10) 파일 콘텐츠 수정
+  ansible.builtin.import_playbook: issue.yml
+
+- name: 11) 웹 콘텐츠 디렉토리 생성
+  ansible.builtin.import_playbook: webcontent.yml
+
+- name: 12) 하드웨어 보고서 생성
+  ansible.builtin.import_playbook: hwreport.yml
+
+- name: 14) 사용자 계정 생성
+  ansible.builtin.import_playbook: users.yml
+
+- name: 15) FTP 서버 구성
+  ansible.builtin.import_playbook: ftp.yml
+
+- name: 16) 시스템 런레벨 변경
+  ansible.builtin.import_playbook: target.yml
+
+- name: 17) 정기적인 잡 수행
+  ansible.builtin.import_playbook: cronjob.yml

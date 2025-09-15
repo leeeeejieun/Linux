@@ -1,0 +1,15 @@
+---
+- name: Change the Default Target
+  hosts: all
+  vars:
+    target: multi-user.target
+  tasks:
+    - name: Change the default target at boot time
+      ansible.builtin.command:
+        cmd: systemctl set-default {{ target }}
+      changed_when: false
+    
+    - name: Change the current target immediately
+      ansible.builtin.command:
+        cmd: systemctl isolate {{ target }}
+      changed_when: false

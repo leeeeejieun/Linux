@@ -1,0 +1,30 @@
+---
+- name: Create the user
+  hosts: dev, test
+  vars_files:
+    - userlist.yml
+    - pw.yml
+  tasks:
+    # - name: Add a user - developer
+    #   ansible.builtin.user:
+    #     name: "{{ item.username }}"
+    #     groups: "{{ item.groups }}"
+    #     password: "{{ pw_developer | password_hash('sha512') }}" 
+    #   when: item.username == 'developer'   
+    #   loop: "{{ users }}"
+
+    # - name: Add a user - manager
+    #   ansible.builtin.user:
+    #     name: "{{ item.username }}"
+    #     groups: "{{ item.groups }}"
+    #     password: "{{ pw_manager | password_hash('sha512') }}" 
+    #   when: item.username == 'manager'   
+    #   loop: "{{ users }}"
+
+    - name: Add a user - developer, manager
+      ansible.builtin.user:
+        name: "{{ item.username }}"
+        groups: "{{ item.groups }}"
+        password: "{{ ( pw_developer if item.username == 'developer' else pw_manager) | password_hash('sha512') }}"
+      loop: "{{ users }}"
+    

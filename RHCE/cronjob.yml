@@ -1,0 +1,13 @@
+---
+- name: 정기적인 잡 수행
+  hosts: test
+  become: false
+  remote_user: ansible
+  gather_facts: false
+  tasks:
+    - name: ansible 사용자 잡 설정
+      ansible.builtin.cron:
+        name: datejob
+        minute: "0,30"
+        weekday: "1,5"
+        job: "date >> /root/datefile"

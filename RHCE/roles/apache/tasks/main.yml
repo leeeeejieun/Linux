@@ -1,0 +1,28 @@
+---
+- name: 패키지 설치
+  ansible.builtin.dnf:
+    name: "{{ packages }}"
+    state: present
+
+- name: 서비스 설정
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: 서비스 기동
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop: "{{ services }}"
+
+- name: 방화벽 등록
+  ansible.posix.firewalld:
+    service: "{{ item }}"
+    permanent: true
+    state: enabled
+    immediate: true
+  loop: "{{ fw_ports }}"

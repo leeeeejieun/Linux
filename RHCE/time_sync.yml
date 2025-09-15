@@ -1,0 +1,11 @@
+---
+- name: 시간 동기화
+  hosts: all
+  tasks:
+    - name: NTP 서버에 시간 동기화
+      ansible.builtin.include_role:
+        name: fedora.linux_system_roles.timesync
+      vars:
+        timesync_ntp_servers:
+          - hostname: kr.pool.ntp.org
+            iburst: true

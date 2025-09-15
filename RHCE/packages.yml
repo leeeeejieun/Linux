@@ -1,0 +1,22 @@
+---
+- name: 1) 패키치 설치 작업 - php, mariadb
+  hosts: dev, test, prod
+  tasks:
+    - name: dev, test 및 prod 호스트 그룹의 호스트에 php 및 mariadb 패키지를 설치
+      ansible.builtin.dnf:
+        name:
+          - php
+          - mariadb
+        state: present
+    
+- name: 2) 패키지 설치 작업 - Development Tools, iotop
+  hosts: dev
+  tasks:
+    - name: dev 호스트 그룹의 호스트에 Development Tools, iotop 패키지 설치
+      ansible.builtin.dnf:
+        name:
+          - '@Development tools'
+          - iotop
+        state: present
+
+        

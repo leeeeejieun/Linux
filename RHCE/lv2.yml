@@ -1,0 +1,19 @@
+---
+- name: Using the fedora.linux_system_roles.storage Role
+  hosts: ansible1.example.com 
+  tasks: 
+    - name: Configuing the Storage
+      ansible.builtin.include_role:
+        name: fedora.linux_system_roles.storage
+      vars:
+        storage_pools:  
+          - name: research
+            disks: 
+              - sdb
+            volumes:
+              - name: data
+                size: "500 MiB"
+                fs_type: ext4
+                mount_point: "/mnt/research"
+                state: present
+    
