@@ -1,0 +1,19 @@
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: empty-pod
+spec:
+  containers:
+    - name: web-server
+      image: nginx:1.14
+      ports:
+        - containerPort: 80
+      # 볼륨 마운트
+      volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+  # 볼륨 정의
+  volumes:
+    - name: html
+      emptyDir: {}

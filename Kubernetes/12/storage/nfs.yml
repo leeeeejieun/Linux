@@ -1,0 +1,22 @@
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: web-nfs
+spec:
+  containers:
+    - name: nginx
+      image: nginx
+      ports:
+        - containerPort: 80
+      # 2) 볼륨 마운트
+      # mount -t nfs 192.168.10.14:/nas/k8s  /usr/share/nginx/html
+      volumeMounts:
+        - name:  html
+          mountPath:  /usr/share/nginx/html
+  # 1) 볼륨 정의
+  volumes:
+    - name:  html
+      nfs:
+        server: 192.168.10.14
+        path: /nas/k8s
